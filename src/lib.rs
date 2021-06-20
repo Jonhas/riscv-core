@@ -1,16 +1,55 @@
-pub struct CPU 
-{
-    clock: u64, 
-    xlen:Xlen, 
-    pc: u64
+use bytes::BytesMut;
+
+#[derive(Debug)]
+pub struct CPU {
+    xlen: Xlen,
+    pc: u64,
+    reg_file: Vec<u32>,
+    memory:BytesMut 
+}
+
+impl CPU {
+    pub fn new(xlen: Xlen, pc: u64) -> CPU {
+        let amount: u32; 
+        match xlen {
+            Xlen::Bit16 => amount = 16,
+            Xlen::Bit32 => amount = 32,
+            Xlen::Bit64 => amount = 64,
+            Xlen::Bit128 => amount = 128,
+        };
+        CPU {
+            xlen: xlen,
+            pc: pc,
+            reg_file: vec![amount],
+            memory: BytesMut::with_capacity(2)
+        }
+    }
 }
 
 #[derive(Debug)]
-enum Instruction {
-    Undefined,
+#[allow(dead_code)]
+pub enum Xlen {
+    Bit16,
+    Bit32,
+    Bit64,
+    Bit128,
 }
 
-pub enum Type {
+#[allow(dead_code)]
+pub enum PrivelegeMode {
+    User,
+    Supervisor,
+    Reserved,
+    Machine,
+}
+
+#[allow(dead_code)]
+pub enum TrapType {
+    LoadPageFault,
+    UserSoftwareInterrupt,
+}
+
+pub enum InstrFormat {
     R,
     I,
     S,
@@ -19,28 +58,18 @@ pub enum Type {
     J,
 }
 
+impl InstrFormat {
+    fn decode(&self, inst: u32) -> Instruction {
+        Instruction::Undefined
+    }
+}
+
 #[derive(Debug)]
-#[allow(dead_code)]
-pub enum Xlen {
-    Bit32, /* Bit64  */
-           /* Bit128 */
+enum Instruction {
+    Undefined,
 }
 
-
-#[allow(dead_code)]
-pub enum PrivelegeMode 
-{
-    User,
-    Supervisor, 
-    Reserved,
-    Machine
-}
-
-#[allow(dead_code)]
-pub enum TrapType {
-    LoadPageFault, 
-    UserSoftwareInterrupt
-}
+fn fetch() {}
 
 fn decode(instr: u32) {
     let opcode = instr & 0b11111111;
@@ -52,13 +81,7 @@ fn decode(instr: u32) {
     print!("Instruction {:#010x} is {:?}\n", instr, decoded);
 }
 
-impl Type {
-    fn decode(&self, inst: u32) -> Instruction {
-        Instruction::Undefined
-    }
-}
-
-const ENCODING_TABLE: [Option<Type>; 128] = [
+const ENCODING_TABLE: [Option<InstrFormat>; 128] = [
     /* 000000000 */ None, /* 000000001 */ None, /* 000000010 */ None,
     /* 000000011 */ None, /* 000000100 */ None, /* 000000101 */ None,
     /* 000000110 */ None, /* 000000111 */ None, /* 000001000 */ None,
@@ -103,3 +126,5 @@ const ENCODING_TABLE: [Option<Type>; 128] = [
     /* 001111011 */ None, /* 001111100 */ None, /* 001111101 */ None,
     /* 001111110 */ None, /* 001111111 */ None,
 ];
+
+fn process_pipeline() {}
