@@ -1,28 +1,16 @@
-use bytes::BytesMut;
-
 #[derive(Debug)]
 pub struct CPU {
     xlen: Xlen,
     pc: u64,
-    reg_file: Vec<u32>,
-    memory:BytesMut 
+    reg_file: Vec<u8>,
+    memory: Vec<u8>,
 }
 
 impl CPU {
-    pub fn new(xlen: Xlen, pc: u64) -> CPU {
-        let amount: u32; 
-        match xlen {
-            Xlen::Bit16 => amount = 16,
-            Xlen::Bit32 => amount = 32,
-            Xlen::Bit64 => amount = 64,
-            Xlen::Bit128 => amount = 128,
-        };
-        CPU {
-            xlen: xlen,
-            pc: pc,
-            reg_file: vec![amount],
-            memory: BytesMut::with_capacity(2)
-        }
+    pub fn read_memory(&self, mut addr: u8, mut data: u8) {
+        addr -= 0x80000000;
+        assert!(addr > 0 && addr < (self.memory.len() as u8));
+        self.memory = &self.memory[..(addr as usize)] + data + &self.memory[addr + data];
     }
 }
 
