@@ -38,6 +38,23 @@ pub enum TrapType {
     UserSoftwareInterrupt,
 }
 
+#[derive(Debug)]
+enum Instruction {
+    Undefined,
+    Lui {rd: u8, imm: i32},
+    Auipc {rd: u8, imm:i32},
+    Addi {rd: u8, rs1:u8, imm: i32},
+    Slli{rd:u8, rs1: u8, shamt: u32},
+    Srli{rd:u8, rs1:u8, shamt:u32},
+    Srai{rd:u8, rs1:u8, shamt:u32},
+    Slti {rd: u8, rs1: u8, imm: i32},
+    Sltiu {rd: u8, rs1: u8, imm:i32},
+    Xori {rd:u8, rs1:u8, imm:i32},
+    Ori {rd:u8, rs1:u8, imm:i32},
+    Andi {rd:u8, rs1:u8, imm:i32}
+}
+
+
 #[derive(Clone,Copy)]
 pub enum InstrFormat {
     R,
@@ -58,6 +75,10 @@ impl InstrFormat {
                 let funct3 = ((instr >> 12) & 0b111) as u8;
                 let rd = ((instr >> 7) & 0b11111) as u8;
 
+                let shamt = (imm & 0b11111) as u32;
+                let shiftop = (imm >> 6) & 0b1111111;
+
+                // Sign extend the immediate field
                 let imm = ((imm as i32) << 20) >> 20;
                 match opcode {
                     0b0010011 => {
@@ -68,6 +89,14 @@ impl InstrFormat {
                             0b100 => Instruction::Xori {rd, rs1, imm},
                             0b110 => Instruction::Ori {rd, rs1, imm},
                             0b111 => Instruction::Andi {rd, rs1, imm},
+                            0b001 => Instruction::Slli {rd, rs1,shamt},
+                            0b101 => {
+                                match shiftop {
+                                    0b000000 => Instruction::Srli {rd, rs1, shamt},
+                                    0b010000 => Instruction::Srai {rd, rs1, shamt},
+                                    _ => Instruction::Undefined
+                                }
+                            }
                             _ => Instruction::Undefined
                         };
 
@@ -81,20 +110,6 @@ impl InstrFormat {
     }
 }
 
-#[derive(Debug)]
-enum Instruction {
-    Undefined,
-    Lui {rd: u8, imm: i32},
-    Auipc {rd: u8, imm:i32},
-    Addi {rd: u8, rs1:u8, imm: i32},
-    Slti {rd: u8, rs1: u8, imm: i32},
-    Sltiu {rd: u8, rs1: u8, imm:i32},
-    Xori {rd:u8, rs1:u8, imm:i32},
-    Ori {rd:u8, rs1:u8, imm:i32},
-    Andi {rd:u8, rs1:u8, imm:i32}
-}
-
-fn fetch() {}
 
 fn decode(instr: u32) {
     let opcode = (instr & 0b11111111) as u8;
@@ -123,4 +138,3 @@ const ENCODING_TABLE: [Option<InstrFormat>; 13] = [
     /* 0b1110011 */ Some(InstrFormat::I),
 ];
 
-fn process_pipeline() {}
